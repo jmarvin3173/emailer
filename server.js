@@ -36,13 +36,13 @@ Using Gmail App Password
 */
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false,       // STARTTLS
+  port: 465,
+  secure: true,  // SSL
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS
   },
-  family: 4            // Force IPv4
+  family: 4      // IPv4
 });
 
 /*

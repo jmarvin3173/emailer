@@ -47,7 +47,10 @@ Send email route
 */
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
-  if (!name || !email || !message) return res.status(400).send("Missing required fields");
+
+  if (!name || !email || !message) {
+    return res.status(400).send("Missing required fields");
+  }
 
   try {
     console.log("Sending email to self...");
@@ -60,7 +63,7 @@ app.post("/send-email", async (req, res) => {
     });
     console.log("Email to self sent!");
 
-    console.log("Sending confirmation email to user...");
+    console.log("Sending confirmation to user...");
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: email,
@@ -72,7 +75,7 @@ app.post("/send-email", async (req, res) => {
     res.status(200).send("Emails sent successfully!");
   } catch (err) {
     console.error("Nodemailer Error:", err);
-    res.status(500).send("Failed to send emails.");
+    res.status(500).send(`Failed to send emails: ${err.message}`);
   }
 });
 

@@ -8,9 +8,7 @@ dotenv.config();
 const app = express();
 
 /*
-Allowed origins
-IMPORTANT:
-Origins must NOT contain paths or trailing slashes
+CORS middleware
 */
 const allowedOrigins = [
   process.env.LOCAL,
@@ -23,24 +21,12 @@ app.use((req, res, next) => {
   next();
 });
 
-/*
-CORS middleware
-*/
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error(`CORS blocked: ${origin}`));
-    },
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"]
-  })
-);
-
-/*
-Handle preflight requests
-*/
-app.options("/*", cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS blocked: ${origin}`));
+  }
+}));
 
 app.use(express.json());
 

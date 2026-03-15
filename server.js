@@ -35,11 +35,14 @@ Nodemailer transporter
 Using Gmail App Password
 */
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,       // STARTTLS
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS
-  }
+  },
+  family: 4            // Force IPv4
 });
 
 /*

@@ -29,13 +29,7 @@ CORS middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow server-to-server requests or Postman
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error(`CORS blocked: ${origin}`));
     },
     methods: ["GET", "POST", "OPTIONS"],
@@ -46,7 +40,7 @@ app.use(
 /*
 Handle preflight requests
 */
-app.options("*", cors());
+app.options("/*", cors());
 
 app.use(express.json());
 

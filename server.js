@@ -7,33 +7,64 @@ dotenv.config();
 
 const app = express();
 
+/*
+Allowed origins
+IMPORTANT:
+Origins must NOT contain paths or trailing slashes
+*/
 const allowedOrigins = [
   process.env.LOCAL,
   process.env.GITHUB_PATH
-];
+].filter(Boolean);
 
-// Allow frontend
-app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (e.g., Postman)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS not allowed for this origin"));
-    }
-  }
-}));
+// Debug (optional but useful)
+app.use((req, res, next) => {
+  console.log("Request Origin:", req.headers.origin);
+  next();
+});
+
+/*
+CORS middleware
+*/
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow server-to-server requests or Postman
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked: ${origin}`));
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]
+  })
+);
+
+/*
+Handle preflight requests
+*/
+app.options("*", cors());
+
 app.use(express.json());
 
-// Nodemailer transporter (Gmail)
+/*
+Nodemailer transporter
+Using Gmail App Password
+*/
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS, // App Password
-  },
+    pass: process.env.GMAIL_PASS
+  }
 });
 
+/*
+Send email route
+*/
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
 
@@ -46,17 +77,20 @@ app.post("/send-email", async (req, res) => {
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: process.env.GMAIL_USER,
-      replyTo: email, // allows replying to the user
+      replyTo: email,
       subject: `Message from ${name}`,
-      text: message,
+      text: message
     });
 
-    // Confirmation to user
+    // Confirmation email to sender
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: email,
-      subject: "Thanks for contacting us!",
-      html: `<p>Hi ${name},</p><p>Thanks for reaching out! I got your message.</p>`,
+      subject: "Thanks for contacting me!",
+      html: `
+        <p>Hi ${name},</p>
+        <p>Thanks for reaching out! I received your message and will get back to you soon.</p>
+      `
     });
 
     res.status(200).send("Emails sent successfully!");
@@ -66,5 +100,18 @@ app.post("/send-email", async (req, res) => {
   }
 });
 
+/*
+Health check route (useful for Render)
+*/
+app.get("/", (req, res) => {
+  res.send("Email API running");
+});
+
+/*
+Start server
+*/
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

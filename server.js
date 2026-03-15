@@ -47,31 +47,27 @@ Send email route
 */
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
-
-  if (!name || !email || !message) {
-    return res.status(400).send("Missing required fields");
-  }
+  if (!name || !email || !message) return res.status(400).send("Missing required fields");
 
   try {
-    // Email to yourself
+    console.log("Sending email to self...");
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: process.env.GMAIL_USER,
       replyTo: email,
       subject: `Message from ${name}`,
-      text: message
+      text: message,
     });
+    console.log("Email to self sent!");
 
-    // Confirmation email to sender
+    console.log("Sending confirmation email to user...");
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: email,
-      subject: "Thanks for contacting me!",
-      html: `
-        <p>Hi ${name},</p>
-        <p>Thanks for reaching out! I received your message and will get back to you soon.</p>
-      `
+      subject: "Thanks for contacting us!",
+      html: `<p>Hi ${name},</p><p>Thanks for reaching out! I got your message.</p>`,
     });
+    console.log("Confirmation email sent!");
 
     res.status(200).send("Emails sent successfully!");
   } catch (err) {
